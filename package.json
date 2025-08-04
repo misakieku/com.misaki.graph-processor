@@ -1,0 +1,21 @@
+{
+  "name": "com.misaki.graph-processor",
+  "version": "1.0.0",
+  "displayName": "Graph Processor",
+  "description": "A high performance graph processor for graph toolkit.",
+  "keywords": [
+    "graph toolkit",
+    "processor",
+    "node graph",
+    "extension"
+  ],
+  "author": {
+    "name": "Misaki",
+    "url": "https://github.com/misakieku",
+    "email": "misaki_39@outlook.com"
+  },
+  "dependencies": {
+    "com.unity.graphtoolkit": "0.1.0"
+  },
+  "unity": "6000.2"
+}

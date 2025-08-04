@@ -1,0 +1,20 @@
+{
+    "name": "Misaki.GraphProcessor.Sample",
+    "rootNamespace": "Misaki.GraphProcessor.Sample",
+    "references": [
+        "GUID:f5aa8b06f9befbe499e5fda11070d19b",
+        "GUID:70ef9a24f4cfc4aec911c1414e3f90ad",
+        "GUID:d1e08c06f8f9473888c892637c83c913"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
