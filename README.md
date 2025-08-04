@@ -1,4 +1,4 @@
-# Misaki Graph Processor
+# Graph Processor
 
 A powerful and extensible graph processing system built on Unity's Graph Toolkit, designed for creating data flow graphs with executable nodes and automatic dependency resolution.
 
