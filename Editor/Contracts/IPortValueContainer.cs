@@ -13,7 +13,7 @@ namespace Misaki.GraphProcessor.Editor
         /// <typeparam name="T">The expected type of the port value.</typeparam>
         /// <param name="portName">The name of the input port.</param>
         /// <returns>The value of the input port, cast to the specified type.</returns>
-        public T GetInputPortValue<T>(string portName);
+        public T? GetInputPortValue<T>(string portName);
 
         /// <summary>
         /// Gets the value of a port by its name.

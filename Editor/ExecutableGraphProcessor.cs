@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Unity.GraphToolkit.Editor;
 
@@ -48,7 +49,7 @@ namespace Misaki.GraphProcessor.Editor
             _portsPool = new();
         }
 
-        private IEnumerable<INode> GetDependencyNodes(INode node, GraphFlow flow)
+        private IEnumerable<INode> GetDependentNodes(INode node, GraphFlow flow)
         {
             var ports = flow switch
             {
@@ -123,8 +124,17 @@ namespace Misaki.GraphProcessor.Editor
                     // Push post-processing entry for this node
                     stack.Push((currentNode, true));
 
+                    INode[] dependencies;
+                    if (currentNode is ICustomDependency dependent)
+                    {
+                        dependencies = dependent.GetDependentNodes(flow);
+                    }
+                    else
+                    {
+                        dependencies = GetDependentNodes(currentNode, flow).ToArray();
+                    }
+
                     // Push all dependencies for pre-processing (in reverse order to maintain proper traversal order)
-                    var dependencies = GetDependencyNodes(currentNode, flow).ToArray();
                     for (var i = dependencies.Length - 1; i >= 0; i--)
                     {
                         var dependency = dependencies[i];
@@ -142,20 +152,20 @@ namespace Misaki.GraphProcessor.Editor
         {
             if (buildOption is not BuildOption option)
             {
-                throw new System.ArgumentException("Invalid build option type", nameof(buildOption));
+                throw new ArgumentException("Invalid build option type", nameof(buildOption));
             }
 
-            var nodes = _graph.GetNodes().ToList();
+            var nodes = _graph.GetNodes().ToArray();
             foreach (var node in option.MasterNodes)
             {
                 if (!nodes.Contains(node))
                 {
-                    throw new System.ArgumentException($"Master node {node} is not part of the graph", nameof(option.MasterNodes));
+                    throw new ArgumentException($"Master node {node} is not part of the graph", nameof(option.MasterNodes));
                 }
             }
 
             _processed.Clear();
-            _processed.Capacity = nodes.Count;
+            _processed.Capacity = nodes.Length;
 
             ProcessTopologicalOrder(option.MasterNodes, option.Flow);
 
@@ -168,7 +178,6 @@ namespace Misaki.GraphProcessor.Editor
         private void PushPortData(INode sourceNode)
         {
             object? value = null;
-            var outputPorts = sourceNode.GetOutputPorts();
 
             switch (sourceNode)
             {
@@ -183,7 +192,7 @@ namespace Misaki.GraphProcessor.Editor
                     break;
             }
 
-            foreach (var outputPort in outputPorts)
+            foreach (var outputPort in sourceNode.GetOutputPorts())
             {
                 if (!outputPort.isConnected)
                     continue;
@@ -193,13 +202,38 @@ namespace Misaki.GraphProcessor.Editor
                     ? container.GetPortValue(outputPort.name)
                     : value;
 
+                var shouldDispose = false;
                 outputPort.GetConnectedPorts(_portsPool);
-                foreach (var connectedPort in _portsPool)
+                if (portValue is IBranchUniqueData immutableData)
                 {
-                    if (connectedPort.GetNode() is IPortValueContainer connectedContainer)
+                    foreach (var connectedPort in _portsPool)
                     {
-                        connectedContainer.SetPortValue(connectedPort.name, portValue);
+                        if (connectedPort.GetNode() is IPortValueContainer connectedContainer)
+                        {
+                            var toSend = _portsPool.Count == 1 ? immutableData : immutableData.MakeUniqueForWrite();
+                            connectedContainer.SetPortValue(connectedPort.name, toSend);
+                        }
                     }
+
+                    if (_portsPool.Count > 1)
+                    {
+                        shouldDispose = true;
+                    }
+                }
+                else
+                {
+                    foreach (var connectedPort in _portsPool)
+                    {
+                        if (connectedPort.GetNode() is IPortValueContainer connectedContainer)
+                        {
+                            connectedContainer.SetPortValue(connectedPort.name, portValue);
+                        }
+                    }
+                }
+
+                if ((_portsPool.Count == 0 || shouldDispose) && portValue is IDisposable disposable)
+                {
+                    disposable.Dispose();
                 }
             }
         }

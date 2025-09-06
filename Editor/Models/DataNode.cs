@@ -12,14 +12,14 @@ namespace Misaki.GraphProcessor.Editor
     {
         private readonly Dictionary<string, object?> _portValues = new();
 
-        public T GetInputPortValue<T>(string portName)
+        public T? GetInputPortValue<T>(string portName)
         {
             var port = GetInputPortByName(portName);
             if (port.isConnected)
             {
-                if (_portValues.TryGetValue(portName, out var obj) && obj is T typedValue)
+                if (_portValues.TryGetValue(portName, out var obj) && obj is T value)
                 {
-                    return typedValue;
+                    return value;
                 }
             }
             else
@@ -46,6 +46,16 @@ namespace Misaki.GraphProcessor.Editor
             }
 
             _portValues[portName] = value;
+        }
+
+        public T GetOptionValue<T>(string optionName)
+        {
+            if (GetNodeOptionByName(optionName).TryGetValue<T>(out var value))
+            {
+                return value;
+            }
+
+            throw new System.ArgumentException($"Option '{optionName}' not found or value is not of type {typeof(T).Name}.");
         }
     }
 
